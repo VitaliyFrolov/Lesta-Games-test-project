@@ -1,0 +1,21 @@
+.cardList {
+   &__header {
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+   }
+
+   &__list {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: auto;
+        gap: 20px;
+   }
+
+   &__search {
+      padding: 5px 10px;
+      border: 1px solid black;
+      border-radius: 10px;
+   }
+}

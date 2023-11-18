@@ -1,0 +1,1 @@
+export { Page as ShipPage } from './ui/Page';

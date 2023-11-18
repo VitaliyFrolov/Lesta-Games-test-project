@@ -1,46 +1,212 @@
-# Getting Started with Create React App
+# Данный проект является тестовым заданием компании LESTA GAMES.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Стек: React.js + Scss
 
-## Available Scripts
+## Для запуска приложения необходимо ввести команду: 
+`npm start`
 
-In the project directory, you can run:
+## Задание:
 
-### `npm start`
+> "Задача -- разработать страницу с отображением всех кораблей игры «Мир Кораблей». Пользователь должен иметь возможность посмотреть на странице основные параметры корабля: название, класс, нация, уровень, описание, изображение и отфильтровать корабли по уровню, нации и классу. В качестве референса можно использовать клиент игры. Внешний вид на ваше усмотрение."
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Требования к технической реализации:
+> 1. typescript
+> 2. всё остальное на ваше усмотрение
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Решение:
 
-### `npm test`
+# 1. Первым делом я построил feature sliced design архитектуру приложения, тем самым отделил логику от интерфейса и разделил все на компоненты.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# 2. В компоненте "CardList" мы делаем запрос на сервер в формате GraphQL и получаем данные, сохраняя их в переменную data.
+На этом шаге мы могли бы сделать пагинацию, но у нас нет необходимых аргументов для корректного запроса и единственный исход - запрашивать сразу все данные. 
 
-### `npm run build`
+Далее мы типизируем данные получаемые с сервера:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+type dataNation = { 
+    [nation: string]: string
+} 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+type dataType = {
+    [type: string]: string
+}
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+export interface IGraphQLReq {
+    title: string;
+    description: string;
+    icons: any;
+    id: number;
+    level: number | null;
+    nation: dataNation;
+    type: dataType;
+}
+```
 
-### `npm run eject`
+Так же отсутствие необходимых аргументов для запроса приводит нас к фильтрации данных на клиенте, что ни есть хорошо, т.к это вызывает лишнюю нагрузку на клиент.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+# 3. После успешного запроса мы перебрали переменную data, которая является массивом данных пришедших с сервера и отрисовали карточки всех кораблей.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+На этом этапе мы могли бы реализовать динамическую пагинацию, но нас все еще останавливает отсутствие аргументов для корректного запроса к серверу.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+# 4. Далее мы занимаемся фильтрацией.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Для фильтрации по названию я реализовал поисковую строку, которая работает следующим образом:
 
-## Learn More
+Мы имееи input с типом text.
+```
+<input
+    type="text"
+    placeholder="search"
+    onChange={(e) => setShipName(e.target.value)}
+    className={styles.cardList__search}
+/>
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+ В данном коде мы отлавливаем событие onChange и сохраняем название корабля при помощи хука useState, далее это значение поступит в качестве аргумента в функцию filterData()
+
+ Следующим шагом мы делаем фильтры по уровню, нации и классу корабля.
+
+ Для этого я создал ui компонент Filter.
+
+ ```
+ export const Filter = ({data, setData, selecters, labelId, title}: IFilterData) => {
+    return (
+        <div className={styles.filter}>
+            <label htmlFor={labelId}>{title}:</label>
+            <select
+                value={data || ''}
+                onChange={(e) => {
+                    const selectedData: string  = e.target.value;
+                    setData(selectedData);
+                }}            
+            >
+                <option value="">All</option>
+                {selecters.map(data => (
+                    <option key={data} value={data}>{data}</option>
+                ))}
+            </select>
+        </div>
+    )
+}
+ ```
+
+В компоненте Filter мы позволяем выбрать то, как мы будем фильтровать данные. Filter является своего рода контейнером.
+
+Так же для корректной типизации данному компоненту был написал interface:
+
+```
+interface IFilterData {
+    data: string | number | null;
+    setData: (data: string) => void
+    selecters: string[] | number[];
+    labelId: string;
+    title: string;
+}
+```
+
+Сама же фильтрация происходит с помощью функции FilterData:
+
+```
+import { IGraphQLReq } from "../types/Data";
+
+export const filterData = (search: string, level: number | string | null, nation: string | null, classShip: string | null, data: IGraphQLReq[]) => {
+    if (!search && !level && !nation && !classShip) {
+        return data
+    }
+
+    let filteredData = data;
+    if (search) {
+        filteredData = filteredData.filter(item => item.title.toLowerCase().includes(search.toLowerCase()));
+    }
+    if (level) {
+        filteredData = filteredData.filter(item => item.level?.toString() === level);
+    }
+
+    if (nation) {
+        filteredData = filteredData.filter(item => item.nation.title === nation);
+    }
+
+    if (classShip) {
+        filteredData = filteredData.filter(item => item.type.name === classShip.toLowerCase());
+    }
+    
+    return filteredData;
+}   
+```
+
+В качестве аргументов в функцию поступают:
+1. search - передает данные для поиска по имени,
+2. level - передает данные для поиска по уровню,
+3. nation - передает данные для поиска по нации,
+4. classShip - передает данные для поиска по классу,
+5. data - массив данных, которые мы получили с сервера.
+
+Первым делом в функции у нас идет проверка на наличие какой либо фильтрации:
+
+```
+if (!search && !level && !nation && !classShip) {
+    return data
+}
+```
+
+Если фильтрация отсутствует, возвращаем data без изменения.
+
+Далее мы создаем переменную let с названием filteredData и присваиваем ей значение data.
+После этого мы изменяем переменную filteredData для фильтрации.
+
+Проверяем наличие активного фильтра и фильтруем данные. 
+
+```
+if (search) {
+        filteredData = filteredData.filter(item => item.title.toLowerCase().includes(search.toLowerCase()));
+    }
+    if (level) {
+        filteredData = filteredData.filter(item => item.level?.toString() === level);
+    }
+
+    if (nation) {
+        filteredData = filteredData.filter(item => item.nation.title === nation);
+    }
+
+    if (classShip) {
+        filteredData = filteredData.filter(item => item.type.name === classShip.toLowerCase());
+    }
+```
+
+В конце выполнения наша функция возвращает filterData, что является измененным массивом data.
+
+# 5. Так же я создал более подробный вариант карточки каждого корабля где можно прочитать его описание. 
+
+Для корректной индексации карточек, методом forEach, я добавил им id. 
+
+```
+data.forEach((item: IGraphQLReq, index: number,) => {
+    item.id = index + 1;
+});
+```
+
+Далее в качестве пропса я передал данный id в карточку создал для каждой из них url:
+
+```
+ <Link
+    to={`/ship/${id}`}
+>
+```
+
+На этом этапе мне пришлось сделать второй graphQL запрос на сервер, только на этот раз из страницы конкретной карточки корабля.
+Я не считаю это хорошей практикой, но и от данной реализации отказаться не смог.
+
+Все что нам осталось, это найти по id, который я могу получить из ссылки конкретной карточки, нужный мне объект в массиве получаемый с сервера и отрисовать дынне о нем на этой странице. 
+```
+ const { id } = useParams<{id : string}>();
+const [ data, setData ] = useState<IGraphQLReq[]>([]);
+const selectedItem = id ? data.find(item => item.id === parseInt(id)) : undefined;
+```
+
+## Итог:
+1. Мы создали понятную и масштабируемую архитектуру для приложения.
+2. Мы сделали запрос на сервер и получили данные.
+3. Мы отрисовали все карточки кораблей.
+4. Мы реализовали фильтры для всех кораблей.
+5. Мы вывели более подробные данные о конкретном корабле в отдельной странице. 

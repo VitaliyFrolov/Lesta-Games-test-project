@@ -1,26 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { FC } from 'react';
+import { RouterProvider, createBrowserRouter, Outlet, useLocation } from 'react-router-dom';
+import { PageRout } from './shared/lib/routes';
+import { AllShipsPage } from './pages/AllShipsPage';
+import { ShipPage } from './pages/ShipPage';
+import './styles/index.scss';
 
-function App() {
+const AppLayout: FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <div className="app">
+        <main>
+          <Outlet />
+        </main>
+      </div>
   );
-}
+};
 
-export default App;
+const router = createBrowserRouter([
+  {
+    path: PageRout.AllShips,
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: <AllShipsPage />
+      },
+      {
+        path: PageRout.Ship,
+        element: <ShipPage />
+      }
+    ]
+  }
+]);
+
+export const App: FC = () => {
+  return (
+    <RouterProvider router={router} />
+  );
+};

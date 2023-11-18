@@ -1,0 +1,1 @@
+export { Page as AllShipsPage } from './ui/Page';
