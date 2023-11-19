@@ -23,7 +23,7 @@
 Далее мы типизируем данные получаемые с сервера:
 
 ```
-type dataNation = { 
+type dataNation = {
     [nation: string]: string
 } 
 
@@ -31,10 +31,14 @@ type dataType = {
     [type: string]: string
 }
 
+type dataIcon = {
+    [type: string]: string
+}
+
 export interface IGraphQLReq {
     title: string;
     description: string;
-    icons: any;
+    icons: dataIcon;
     id: number;
     level: number | null;
     nation: dataNation;

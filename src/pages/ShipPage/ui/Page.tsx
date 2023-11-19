@@ -38,40 +38,35 @@ export const Page: FC = () => {
                 </div>
                 <div className={styles.shipPage__img}>
                     <img
-                        src={selectedItem ? selectedItem.icons.medium : null}
+                        src={selectedItem ? selectedItem.icons.medium : 'loading...'}
                         width={400}
                         height={400}
-                        alt={selectedItem ? selectedItem.title : ''}
+                        alt={selectedItem ? selectedItem.title : 'loading...'}
                     />
                 </div>
                 <div className={styles.shipPage__titleWrapper}>
                     <h2 className={styles.shipPage__title}>
-                        {selectedItem ? selectedItem.title : null}
+                        {selectedItem ? selectedItem.title : 'loading...'}
                     </h2>
-                    <img 
-                        width={24}
-                        height={24}
-                        src={selectedItem ? selectedItem.icons.medium : ''}
-                    />
                 </div>
                 <p className={styles.shipPage__description}>
-                    {selectedItem ? selectedItem.description : null}
+                    {selectedItem ? selectedItem.description : 'loading...'}
                 </p>
                 <div className={styles.shipPage__infoTable}>
                    <ul className={styles.infoTable__list}>
                         <li className={styles.infoTable__item}>
                             <p>
-                                Сountry: {selectedItem ? selectedItem.nation.title : null}
+                                Сountry: {selectedItem ? selectedItem.nation.title : 'loading...'}
                             </p>
                         </li>
                         <li className={styles.infoTable__item}>
                             <p>
-                                Type: {selectedItem ? selectedItem.type.name : null} 
+                                Type: {selectedItem ? selectedItem.type.name : 'loading...'} 
                             </p>
                         </li>
                         <li className={styles.infoTable__item}>
                             <p>
-                                Lvl: {selectedItem ? selectedItem.level : null}
+                                Lvl: {selectedItem ? selectedItem.level : 'loading...'}
                             </p>
                         </li>
                    </ul>
